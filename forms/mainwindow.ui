@@ -20,147 +20,165 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="verticalLayoutWidget_2">
-       <layout class="QVBoxLayout" name="mainLayout">
-        <item>
-         <layout class="QHBoxLayout" name="searchBoxLayout">
-          <item>
-           <widget class="QLineEdit" name="searchBox">
-            <property name="placeholderText">
-             <string>Search...</string>
-            </property>
-            <property name="clearButtonEnabled">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="advancedSearchButton">
-            <property name="text">
-             <string>Advanced Search</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QSplitter" name="splitter">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <widget class="QWidget" name="searchAreaWidget" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_5">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QScrollArea" name="scrollArea">
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
-              </property>
-              <property name="horizontalScrollBarPolicy">
-               <enum>Qt::ScrollBarAlwaysOff</enum>
-              </property>
-              <property name="widgetResizable">
-               <bool>true</bool>
-              </property>
-              <widget class="QWidget" name="scrollAreaWidgetContents_3">
-               <property name="geometry">
-                <rect>
-                 <x>0</x>
-                 <y>0</y>
-                 <width>403</width>
-                 <height>121</height>
-                </rect>
+      <widget class="QStackedWidget" name="mainWidget">
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <widget class="QWidget" name="listPane" native="true">
+        <layout class="QVBoxLayout" name="mainLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QHBoxLayout" name="searchBoxLayout">
+           <item>
+            <widget class="QLineEdit" name="searchBox">
+             <property name="placeholderText">
+              <string>Search...</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="advancedSearchButton">
+             <property name="text">
+              <string>Advanced Search</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QSplitter" name="splitter">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <widget class="QWidget" name="searchAreaWidget" native="true">
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QScrollArea" name="scrollArea">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
                </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_5">
-                <item>
-                 <widget class="QWidget" name="searchOptionsWidget" native="true">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <layout class="QVBoxLayout" name="_2"/>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QWidget" name="searchModsWidget" native="true">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_6"/>
-                 </widget>
-                </item>
-               </layout>
+               <property name="horizontalScrollBarPolicy">
+                <enum>Qt::ScrollBarAlwaysOff</enum>
+               </property>
+               <property name="widgetResizable">
+                <bool>true</bool>
+               </property>
+               <widget class="QWidget" name="scrollAreaWidgetContents_3">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>501</width>
+                  <height>121</height>
+                 </rect>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_5">
+                 <item>
+                  <widget class="QWidget" name="searchOptionsWidget" native="true">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <layout class="QVBoxLayout" name="_2"/>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QWidget" name="searchModsWidget" native="true">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_6"/>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
               </widget>
-             </widget>
-            </item>
-           </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="verticalLayoutWidget">
+            <layout class="QVBoxLayout" name="mainViewLayout">
+             <item>
+              <widget class="QTreeView" name="treeView">
+               <property name="frameShape">
+                <enum>QFrame::StyledPanel</enum>
+               </property>
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="tabKeyNavigation">
+                <bool>true</bool>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>false</bool>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::SingleSelection</enum>
+               </property>
+               <property name="uniformRowHeights">
+                <bool>true</bool>
+               </property>
+               <property name="sortingEnabled">
+                <bool>true</bool>
+               </property>
+               <attribute name="headerHighlightSections">
+                <bool>false</bool>
+               </attribute>
+               <attribute name="headerShowSortIndicator" stdset="0">
+                <bool>true</bool>
+               </attribute>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
-          <widget class="QWidget" name="verticalLayoutWidget">
-           <layout class="QVBoxLayout" name="mainViewLayout">
-            <item>
-             <widget class="QTreeView" name="treeView">
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="editTriggers">
-               <set>QAbstractItemView::NoEditTriggers</set>
-              </property>
-              <property name="tabKeyNavigation">
-               <bool>true</bool>
-              </property>
-              <property name="alternatingRowColors">
-               <bool>false</bool>
-              </property>
-              <property name="selectionMode">
-               <enum>QAbstractItemView::SingleSelection</enum>
-              </property>
-              <property name="uniformRowHeights">
-               <bool>true</bool>
-              </property>
-              <property name="sortingEnabled">
-               <bool>true</bool>
-              </property>
-              <attribute name="headerHighlightSections">
-               <bool>false</bool>
-              </attribute>
-              <attribute name="headerShowSortIndicator" stdset="0">
-               <bool>true</bool>
-              </attribute>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-       </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="StashPane" name="stashPane"/>
       </widget>
       <widget class="QTabWidget" name="tabWidget">
        <property name="sizePolicy">
@@ -182,7 +200,7 @@
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <property name="documentMode">
         <bool>false</bool>
@@ -702,6 +720,11 @@
          <string>Currency</string>
         </attribute>
        </widget>
+       <widget class="RecipePane" name="recipePane">
+        <attribute name="title">
+         <string>Recipes</string>
+        </attribute>
+       </widget>
        <widget class="SettingsPane" name="settingsPane">
         <attribute name="title">
          <string>Settings</string>
@@ -766,6 +789,18 @@
    <class>CurrencyPane</class>
    <extends>QWidget</extends>
    <header>forms/currencypane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RecipePane</class>
+   <extends>QWidget</extends>
+   <header>forms/recipepane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>StashPane</class>
+   <extends>QWidget</extends>
+   <header>forms/stashpane.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

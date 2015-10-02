@@ -67,7 +67,8 @@ SOURCES += \
     forms/currencypane.cpp \
     src/external/qcustomplot.cpp \
     forms/templatedialog.cpp \
-    src/shops/shopsubmitter.cpp
+    src/shops/shopsubmitter.cpp \
+    forms/stashpane.cpp
 
 HEADERS += \
     src/item.h \
@@ -109,7 +110,8 @@ HEADERS += \
     src/external/qcustomplot.h \
     forms/templatedialog.h \
     src/external/syntaxhighlighter.h \
-    src/shops/shopsubmitter.h
+    src/shops/shopsubmitter.h \
+    forms/stashpane.h
 
 FORMS += \
     forms/mainwindow.ui \
@@ -117,7 +119,8 @@ FORMS += \
     forms/settingspane.ui \
     forms/recipepane.ui \
     forms/currencypane.ui \
-    forms/templatedialog.ui
+    forms/templatedialog.ui \
+    forms/stashpane.ui
 
 CONFIG += c++11
 

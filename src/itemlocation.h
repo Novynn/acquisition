@@ -31,6 +31,14 @@ public:
     void set_tab_label(const std::string &tab_label) { tab_label_ = tab_label; }
     bool socketed() const { return socketed_; }
     void set_socketed(bool socketed) { socketed_ = socketed; }
+
+    int x() const {
+        return x_;
+    }
+
+    int y() const {
+        return y_;
+    }
 private:
     ItemLocationType type_;
     int tab_id_;
