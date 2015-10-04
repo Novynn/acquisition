@@ -15,7 +15,13 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QListWidget" name="listWidget"/>
+    <widget class="QTreeWidget" name="treeWidget">
+     <column>
+      <property name="text">
+       <string>Recipe</string>
+      </property>
+     </column>
+    </widget>
    </item>
   </layout>
  </widget>
