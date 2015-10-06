@@ -68,7 +68,9 @@ SOURCES += \
     src/external/qcustomplot.cpp \
     forms/templatedialog.cpp \
     src/shops/shopsubmitter.cpp \
-    forms/stashpane.cpp
+    forms/stashpane.cpp \
+    forms/lootfilterpane.cpp \
+    forms/widgets/filterlistitemwidget.cpp
 
 HEADERS += \
     src/item.h \
@@ -111,7 +113,9 @@ HEADERS += \
     forms/templatedialog.h \
     src/external/syntaxhighlighter.h \
     src/shops/shopsubmitter.h \
-    forms/stashpane.h
+    forms/stashpane.h \
+    forms/lootfilterpane.h \
+    forms/widgets/filterlistitemwidget.h
 
 FORMS += \
     forms/mainwindow.ui \
@@ -120,7 +124,9 @@ FORMS += \
     forms/recipepane.ui \
     forms/currencypane.ui \
     forms/templatedialog.ui \
-    forms/stashpane.ui
+    forms/stashpane.ui \
+    forms/lootfilterpane.ui \
+    forms/widgets/filterlistitemwidget.ui
 
 CONFIG += c++11
 

@@ -47,6 +47,8 @@ private slots:
     void on_tabExclusionListWidget_itemChanged(QListWidgetItem *item);
     void on_shopTimeoutBox_valueChanged(int val);
 
+    void on_bumpIntervalBox_valueChanged(int val);
+
 private:
     void addShopWidget(const QString &id);
     Ui::SettingsPane *ui;

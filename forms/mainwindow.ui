@@ -24,7 +24,7 @@
        <property name="currentIndex">
         <number>1</number>
        </property>
-       <widget class="QWidget" name="listPane" native="true">
+       <widget class="QWidget" name="listPane">
         <layout class="QVBoxLayout" name="mainLayout">
          <property name="leftMargin">
           <number>0</number>
@@ -106,8 +106,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>501</width>
-                  <height>121</height>
+                  <width>98</width>
+                  <height>36</height>
                  </rect>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -200,7 +200,7 @@
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>3</number>
        </property>
        <property name="documentMode">
         <bool>false</bool>
@@ -725,6 +725,11 @@
          <string>Recipes</string>
         </attribute>
        </widget>
+       <widget class="LootFilterPane" name="filterPane">
+        <attribute name="title">
+         <string>Loot Filter</string>
+        </attribute>
+       </widget>
        <widget class="SettingsPane" name="settingsPane">
         <attribute name="title">
          <string>Settings</string>
@@ -801,6 +806,12 @@
    <class>StashPane</class>
    <extends>QWidget</extends>
    <header>forms/stashpane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LootFilterPane</class>
+   <extends>QWidget</extends>
+   <header>forms/lootfilterpane.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
