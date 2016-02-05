@@ -362,7 +362,7 @@ void Shop::OnShopSubmitted(const QString &threadId) {
     if (!shops_.contains(threadId)) return;
     ShopData* shop = shops_.value(threadId);
     // now let's hope that shop was submitted successfully and notify poe.trade
-    QNetworkRequest request(QUrl("http://verify.xyz.is/" + threadId + "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+    QNetworkRequest request(QUrl("http://verify.poe.trade/" + threadId + "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
     app_.logged_in_nm().get(request);
 
     QLOG_INFO() << "Shop updated successfully!";
