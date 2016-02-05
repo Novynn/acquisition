@@ -85,27 +85,27 @@ Buyout BuyoutManager::GetTab(const std::string &tab) const {
     return tab_buyouts_.value(QString::fromStdString(tab));
 }
 
-void BuyoutManager::SetTab(const Bucket &tab, const Buyout &buyout) {
+void BuyoutManager::SetTab(const Bucket &tab, const Buyout &buyout, bool force) {
     QString hash = QString::fromStdString(tab.location().GetGeneralHash());
     save_needed_ = true;
     tab_buyouts_.insert(hash, buyout);
 
-    UpdateTabItems(tab);
+    UpdateTabItems(tab, force);
 }
 
 bool BuyoutManager::ExistsTab(const std::string &tab) const {
     return tab_buyouts_.count(QString::fromStdString(tab)) > 0;
 }
 
-void BuyoutManager::DeleteTab(const Bucket &tab) {
+void BuyoutManager::DeleteTab(const Bucket &tab, bool force) {
     QString hash = QString::fromStdString(tab.location().GetGeneralHash());
     save_needed_ = true;
     tab_buyouts_.remove(hash);
 
-    UpdateTabItems(tab);
+    UpdateTabItems(tab, force);
 }
 
-void BuyoutManager::UpdateTabItems(const Bucket &tab) {
+void BuyoutManager::UpdateTabItems(const Bucket &tab, bool force) {
     std::string hash = tab.location().GetGeneralHash();
     bool set = ExistsTab(hash);
     Buyout buyout;
@@ -130,12 +130,12 @@ void BuyoutManager::UpdateTabItems(const Bucket &tab) {
                     continue;
                 }
             }
-            else {
+            else if (!force){
                 continue;
             }
             Set(*item, b, QString::fromStdString(hash));
         }
-        else if (!set && Exists(*item) && !IsItemManuallySet(*item)) {
+        else if (!set && Exists(*item) && (!IsItemManuallySet(*item) || force)) {
             Delete(*item);
         }
     }

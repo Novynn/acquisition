@@ -90,7 +90,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>403</width>
+                 <width>418</width>
                  <height>121</height>
                 </rect>
                </property>
@@ -136,11 +136,14 @@
               <property name="tabKeyNavigation">
                <bool>true</bool>
               </property>
+              <property name="showDropIndicator" stdset="0">
+               <bool>false</bool>
+              </property>
               <property name="alternatingRowColors">
                <bool>false</bool>
               </property>
               <property name="selectionMode">
-               <enum>QAbstractItemView::SingleSelection</enum>
+               <enum>QAbstractItemView::ExtendedSelection</enum>
               </property>
               <property name="uniformRowHeights">
                <bool>true</bool>

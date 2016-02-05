@@ -144,15 +144,15 @@ public:
     static bool Equal(const Buyout &buyout1, const Buyout &buyout2);
     static QString Generate(const Buyout &buyout);
 
-    void SetTab(const Bucket &tab, const Buyout &buyout);
+    void SetTab(const Bucket &tab, const Buyout &buyout, bool force = false);
     Buyout GetTab(const std::string &tab) const;
-    void DeleteTab(const Bucket &tab);
+    void DeleteTab(const Bucket &tab, bool force = false);
     bool ExistsTab(const std::string &tab) const;
 
     void Save();
     void Load();
     bool IsItemManuallySet(const Item &item) const;
-    void UpdateTabItems(const Bucket &tab);
+    void UpdateTabItems(const Bucket &tab, bool force = false);
 private:
     QString ItemHash(const Item &item) const;
     static std::string Serialize(const QMap<QString, Buyout> &buyouts);

@@ -85,7 +85,7 @@ public:
     ~MainWindow();
     std::vector<Column*> columns;
     void RemoveTab(int index);
-    void GenerateCurrentItemHeader();
+    void GenerateCurrentItemHeader(const std::shared_ptr<Item> &item);
     void UpdateSettingsBox();
     void InitializeActions();
     Application* application() { return app_.get(); }
@@ -116,11 +116,12 @@ private slots:
 
 private:
     void UpdateCurrentHeaderState();
-    void UpdateCurrentBucket();
-    void UpdateCurrentItem();
-    void UpdateCurrentItemMinimap();
-    void UpdateCurrentItemIcon(const QImage &image);
-    void UpdateCurrentItemProperties();
+    void UpdateCurrentSelection();
+    void UpdateCurrentBucket(const Bucket &bucket);
+    void UpdateCurrentItem(const std::shared_ptr<Item> &item);
+    void UpdateCurrentItemMinimap(const std::shared_ptr<Item> &item);
+    void UpdateCurrentItemIcon(const std::shared_ptr<Item> &item, const QImage &image);
+    void UpdateCurrentItemProperties(const std::shared_ptr<Item> &item);
     void UpdateCurrentBuyout();
     Search *NewSearch();
     void InitializeLogging();
@@ -135,8 +136,8 @@ private:
 
     std::unique_ptr<Application> app_;
     Ui::MainWindow *ui;
-    std::shared_ptr<Item> current_item_;
-    Bucket current_bucket_;
+    Items current_items_;
+    QList<Bucket> current_buckets_;
     std::vector<Search*> searches_;
     Search *current_search_;
     QTabBar *tab_bar_;

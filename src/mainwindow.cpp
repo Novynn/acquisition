@@ -337,10 +337,13 @@ void MainWindow::InitializeUi() {
             Bucket bucket = *current_search_->buckets()[current_search_->GetIndex(index).row()];
             app_->buyout_manager().DeleteTab(bucket);
             app_->shop().ExpireShopData();
-            if (bucket.location().GetGeneralHash() == current_bucket_.location().GetGeneralHash()) {
-                // Update UI
-                Buyout b = {};
-                UpdateBuyoutWidgets(b);
+
+            for (Bucket b : current_buckets_) {
+                if (bucket.location().GetGeneralHash() == b.location().GetGeneralHash()) {
+                    // Update UI
+                    UpdateBuyoutWidgets({});
+                    break;
+                }
             }
         }
     });
@@ -355,10 +358,12 @@ void MainWindow::InitializeUi() {
                 app_->buyout_manager().Delete(*item);
             }
             app_->shop().ExpireShopData();
-            if (bucket.location().GetGeneralHash() == current_bucket_.location().GetGeneralHash()) {
-                // Update UI
-                Buyout b = {};
-                UpdateBuyoutWidgets(b);
+            for (Bucket b : current_buckets_) {
+                if (bucket.location().GetGeneralHash() == b.location().GetGeneralHash()) {
+                    // Update UI
+                    UpdateBuyoutWidgets({});
+                    break;
+                }
             }
         }
     });
@@ -512,8 +517,6 @@ void MainWindow::OnBuyoutChange(bool doParse) {
 
     bo.last_update = QDateTime::currentDateTime();
 
-    bool isUpdated = true;
-
     // Don't assign a zero buyout if nothing is entered in the value textbox
     if (ui->buyoutValueLineEdit->text().isEmpty() && (bo.type == BUYOUT_TYPE_BUYOUT || bo.type == BUYOUT_TYPE_FIXED))
         return;
@@ -522,27 +525,12 @@ void MainWindow::OnBuyoutChange(bool doParse) {
     if ((bo.type == BUYOUT_TYPE_BUYOUT || bo.type == BUYOUT_TYPE_FIXED) && bo.currency == CURRENCY_NONE)
         return;
 
-    if (current_item_) {
-        if (app_->buyout_manager().Exists(*current_item_)) {
-            Buyout currBo = app_->buyout_manager().Get(*current_item_);
-            if (BuyoutManager::Equal(currBo, bo)) {
-                isUpdated = false;
-            }
+    bool anyUpdated = false;
 
-            if (currBo.set_by.toStdString() == current_item_->location().GetGeneralHash() &&
-               (bo.type == BUYOUT_TYPE_NONE || bo.currency == CURRENCY_NONE)) {
-                // Set by the tab, changing to "ignore" or not using a currency won't work
-                isUpdated = false;
-            }
-        }
-
-        if (isUpdated) {
-            if (bo.type == BUYOUT_TYPE_NONE)
-                app_->buyout_manager().Delete(*current_item_);
-            else
-                app_->buyout_manager().Set(*current_item_, bo);
-        }
-    } else {
+    // Solve buckets first, as then we can ignore items that get handled
+    QList<std::string> updatedBuckets;
+    for (Bucket current_bucket_ : current_buckets_) {
+        bool isUpdated = true;
         std::string tab = current_bucket_.location().GetGeneralHash();
         if (app_->buyout_manager().ExistsTab(tab)) {
             Buyout currBo = app_->buyout_manager().GetTab(tab);
@@ -552,14 +540,53 @@ void MainWindow::OnBuyoutChange(bool doParse) {
         }
 
         if (isUpdated) {
+            anyUpdated = true;
             if (bo.type == BUYOUT_TYPE_NONE)
                 app_->buyout_manager().DeleteTab(current_bucket_);
             else
                 app_->buyout_manager().SetTab(current_bucket_, bo);
+            updatedBuckets.append(current_bucket_.location().GetUniqueHash());
         }
     }
+
+    for (std::shared_ptr<Item> current_item_ : current_items_) {
+        if (updatedBuckets.contains(current_item_->location().GetUniqueHash())) {
+            // If it's updated from it's stash then we want to cheat here.
+            if (bo.type == BUYOUT_TYPE_NONE)
+                app_->buyout_manager().Delete(*current_item_);
+            else {
+                // Force it to be updated from it's hash
+                QString hash = QString::fromStdString(current_item_->location().GetGeneralHash());
+                app_->buyout_manager().Set(*current_item_, bo, hash);
+            }
+        }
+        else {
+            bool isUpdated = true;
+            if (app_->buyout_manager().Exists(*current_item_)) {
+                Buyout currBo = app_->buyout_manager().Get(*current_item_);
+                if (BuyoutManager::Equal(currBo, bo)) {
+                    isUpdated = false;
+                }
+
+                if (currBo.set_by.toStdString() == current_item_->location().GetGeneralHash() &&
+                   (bo.type == BUYOUT_TYPE_NONE || bo.currency == CURRENCY_NONE)) {
+                    // Set by the tab, changing to "ignore" or not using a currency won't work
+                    isUpdated = false;
+                }
+            }
+
+            if (isUpdated) {
+                anyUpdated = true;
+                if (bo.type == BUYOUT_TYPE_NONE)
+                    app_->buyout_manager().Delete(*current_item_);
+                else
+                    app_->buyout_manager().Set(*current_item_, bo);
+            }
+        }
+    }
+
     // refresh treeView to immediately reflect price changes
-    if (isUpdated) {
+    if (anyUpdated) {
         ui->treeView->model()->layoutChanged();
 
         app_->shop().ExpireShopData();
@@ -661,8 +688,12 @@ void MainWindow::OnImageFetched(QNetworkReply *reply) {
 
     image_cache_->Set(url, image);
 
-    if (current_item_ && (url == current_item_->icon() || url == POE_WEBCDN + current_item_->icon()))
-        UpdateCurrentItemIcon(image);
+    if (current_items_.count() == 1) {
+        std::shared_ptr<Item> item = current_items_.first();
+        if (url == item->icon() || url == POE_WEBCDN + item->icon()) {
+        UpdateCurrentItemIcon(item, image);
+        }
+    }
 }
 
 void MainWindow::OnSearchFormChange() {
@@ -684,30 +715,21 @@ void MainWindow::OnTreeChange(const QItemSelection & /*selected*/, const QItemSe
     QModelIndexList indexes = ui->treeView->selectionModel()->selectedRows();
     if (indexes.isEmpty()) return;
 
-//    for (QModelIndex index : indexes) {
-//        QModelIndex actualIndex = current_search_->GetIndex(index);
-//        if (!actualIndex.parent().isValid()) {
-//            Bucket b = *(current_search_->buckets()[actualIndex.row()]);
-//            qDebug() << "Selected bucket: " << QString::fromStdString(b.location().GetGeneralHash());
-//        }
-//        else {
-//            std::shared_ptr<Item> item = current_search_->buckets()[actualIndex.parent().row()]->items()[actualIndex.row()];
-//            qDebug() << "Selected item: " << QString::fromStdString(item->PrettyName());
-//        }
-//    }
-
-    QModelIndex actualCurrent = current_search_->GetIndex(indexes.first());
-    if (!actualCurrent.parent().isValid()) {
-        // clicked on a bucket
-        current_item_ = nullptr;
-        current_bucket_ = *current_search_->buckets()[actualCurrent.row()];
-        UpdateCurrentBucket();
-    } else {
-        current_item_ = current_search_->buckets()[actualCurrent.parent().row()]->items()[actualCurrent.row()];
-        UpdateCurrentItem();
+    current_buckets_.clear();
+    current_items_.clear();
+    for (QModelIndex index : indexes) {
+        QModelIndex actualIndex = current_search_->GetIndex(index);
+        if (!actualIndex.parent().isValid()) {
+            Bucket b = *(current_search_->buckets()[actualIndex.row()]);
+            current_buckets_.append(b);
+        }
+        else {
+            std::shared_ptr<Item> item = current_search_->buckets()[actualIndex.parent().row()]->items()[actualIndex.row()];
+            current_items_.append(item);
+        }
     }
-    UpdateCurrentBuyout();
-    GenerateCurrentItemHeader();
+
+    UpdateCurrentSelection();
 }
 
 void MainWindow::OnTabChange(int index) {
@@ -867,7 +889,7 @@ Search* MainWindow::NewSearch() {
     return search;
 }
 
-void MainWindow::UpdateCurrentBucket() {
+void MainWindow::UpdateCurrentBucket(const Bucket &bucket) {
     ui->nameLabel->hide();
     ui->imageLabel->hide();
     ui->locationLabel->setText("Location: N/A");
@@ -875,17 +897,17 @@ void MainWindow::UpdateCurrentBucket() {
 
     ui->imageWidget->hide();
 
-    UpdateCurrentItemMinimap();
+    UpdateCurrentItemMinimap(nullptr);
 
-    ItemLocationType location = current_bucket_.location().type();
+    ItemLocationType location = bucket.location().type();
     QString pos = "Stash Tab";
     if (location == ItemLocationType::CHARACTER)
         pos = "Character";
-    ui->typeLineLabel->setText(pos + ": " + QString::fromStdString(current_bucket_.location().GetHeader()));
+    ui->typeLineLabel->setText(pos + ": " + QString::fromStdString(bucket.location().GetHeader()));
     ui->typeLineLabel->show();
 }
 
-void MainWindow::UpdateCurrentItem() {
+void MainWindow::UpdateCurrentItem(const std::shared_ptr<Item> &item) {
     ui->typeLineLabel->show();
     ui->imageLabel->show();
     ui->minimapLabel->show();
@@ -895,37 +917,38 @@ void MainWindow::UpdateCurrentItem() {
     ui->imageWidget->show();
 
     app_->buyout_manager().Save();
-    ui->typeLineLabel->setText(current_item_->typeLine().c_str());
-    if (current_item_->name().empty())
+    ui->typeLineLabel->setText(item->typeLine().c_str());
+    if (item->name().empty())
         ui->nameLabel->hide();
     else {
-        ui->nameLabel->setText(current_item_->name().c_str());
+        ui->nameLabel->setText(item->name().c_str());
         ui->nameLabel->show();
     }
     ui->imageLabel->setText("Loading...");
     ui->imageLabel->setStyleSheet("QLabel { background-color : rgb(12, 12, 43); color: white }");
-    ui->imageLabel->setFixedSize(QSize(current_item_->w(), current_item_->h()) * PIXELS_PER_SLOT);
+    ui->imageLabel->setFixedSize(QSize(item->w(), item->h()) * PIXELS_PER_SLOT);
 
-    UpdateCurrentItemProperties();
-    UpdateCurrentItemMinimap();
+    UpdateCurrentItemProperties(item);
+    UpdateCurrentItemMinimap(item);
 
-    std::string icon = current_item_->icon();
+    std::string icon = item->icon();
     if (icon.size() && icon[0] == '/')
         icon = POE_WEBCDN + icon;
     if (!image_cache_->Exists(icon))
         image_network_manager_->get(QNetworkRequest(QUrl(icon.c_str())));
     else
-        UpdateCurrentItemIcon(image_cache_->Get(icon));
+        UpdateCurrentItemIcon(item, image_cache_->Get(icon));
 
-    ui->locationLabel->setText("Location: " + QString::fromStdString(current_item_->location().GetHeader()));
+    ui->locationLabel->setText("Location: " + QString::fromStdString(item->location().GetHeader()));
+    GenerateCurrentItemHeader(item);
 }
 
-void MainWindow::GenerateCurrentItemHeader() {
+void MainWindow::GenerateCurrentItemHeader(const std::shared_ptr<Item> &item) {
     QString key = "";
     QColor color;
     int frame = FRAME_TYPE_NORMAL;
-    if (current_item_) {
-        frame = current_item_->frameType();
+    if (item) {
+        frame = item->frameType();
     }
     switch(frame) {
     case FRAME_TYPE_MAGIC:
@@ -986,12 +1009,12 @@ void MainWindow::GenerateCurrentItemHeader() {
     ui->rightHeaderLabel->setStyleSheet("border-image: url(:/headers/ItemHeader" + key + "Right.png);");
 }
 
-void MainWindow::UpdateCurrentItemProperties() {
+void MainWindow::UpdateCurrentItemProperties(const std::shared_ptr<Item> &item) {
     std::vector<std::string> sections;
 
     std::string properties_text;
     bool first_prop = true;
-    for (auto &property : current_item_->text_properties()) {
+    for (auto &property : item->text_properties()) {
         if (!first_prop)
             properties_text += "<br>";
         first_prop = false;
@@ -1020,7 +1043,7 @@ void MainWindow::UpdateCurrentItemProperties() {
 
     std::string requirements_text;
     bool first_req = true;
-    for (auto &requirement : current_item_->text_requirements()) {
+    for (auto &requirement : item->text_requirements()) {
         if (!first_req)
             requirements_text += ", ";
         first_req = false;
@@ -1029,7 +1052,7 @@ void MainWindow::UpdateCurrentItemProperties() {
     if (requirements_text.size() > 0)
         sections.push_back("Requires " + requirements_text);
 
-    auto &mods = current_item_->text_mods();
+    auto &mods = item->text_mods();
     for (auto &mod_type : ITEM_MOD_TYPES) {
         std::string mod_list = Util::ModListAsString(mods.at(mod_type));
         if (!mod_list.empty())
@@ -1047,9 +1070,9 @@ void MainWindow::UpdateCurrentItemProperties() {
     ui->propertiesLabel->setText(text.c_str());
 }
 
-void MainWindow::UpdateCurrentItemIcon(const QImage &image) {
-    int height = current_item_->h();
-    int width = current_item_->w();
+void MainWindow::UpdateCurrentItemIcon(const std::shared_ptr<Item> &item, const QImage &image) {
+    int height = item->h();
+    int width = item->w();
     int socket_rows = 0;
     int socket_columns = 0;
     // this will ensure we have enough room to draw the slots
@@ -1062,18 +1085,18 @@ void MainWindow::UpdateCurrentItemIcon(const QImage &image) {
     ItemSocket prev = { 255, '-' };
     size_t i = 0;
 
-    if (current_item_->text_sockets().size() == 0) {
+    if (item->text_sockets().size() == 0) {
         // Do nothing
     }
-    else if (current_item_->text_sockets().size() == 1) {
-        auto &socket = current_item_->text_sockets().front();
+    else if (item->text_sockets().size() == 1) {
+        auto &socket = item->text_sockets().front();
         QImage socket_image(":/sockets/" + QString(socket.attr) + ".png");
         painter.drawImage(0, PIXELS_PER_SLOT * i, socket_image);
         socket_rows = 1;
         socket_columns = 1;
     }
     else {
-        for (auto &socket : current_item_->text_sockets()) {
+        for (auto &socket : item->text_sockets()) {
             bool link = socket.group == prev.group;
             QImage socket_image(":/sockets/" + QString(socket.attr) + ".png");
             if (width == 1) {
@@ -1111,7 +1134,7 @@ void MainWindow::UpdateCurrentItemIcon(const QImage &image) {
                             link_v
                         );
                     } else {
-                        QLOG_ERROR() << "No idea how to draw link for" << current_item_->PrettyName().c_str();
+                        QLOG_ERROR() << "No idea how to draw link for" << item->PrettyName().c_str();
                     }
                 }
             }
@@ -1135,17 +1158,17 @@ void MainWindow::UpdateCurrentItemIcon(const QImage &image) {
     ui->imageLabel->setPixmap(base);
 }
 
-void MainWindow::UpdateCurrentItemMinimap() {
+void MainWindow::UpdateCurrentItemMinimap(const std::shared_ptr<Item> &item) {
     QPixmap pixmap(MINIMAP_SIZE, MINIMAP_SIZE);
     pixmap.fill(QColor("transparent"));
 
     QPainter painter(&pixmap);
     painter.setBrush(QBrush(QColor(0x0c, 0x0b, 0x0b)));
     painter.drawRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
-    if (current_item_) {
-        const ItemLocation &location = current_item_->location();
+    if (item) {
+        const ItemLocation &location = item->location();
         painter.setBrush(QBrush(location.socketed() ? Qt::blue : Qt::red));
-        QRectF rect = current_item_->location().GetRect();
+        QRectF rect = item->location().GetRect();
         painter.drawRect(rect);
     }
     ui->minimapLabel->setPixmap(pixmap);
@@ -1176,21 +1199,6 @@ void MainWindow::UpdateBuyoutWidgets(const Buyout &bo) {
             QString curr = QString::fromStdString(CurrencyAsTag.at(bo.currency));
             ui->buyoutValueLineEdit->setText(QString::number(bo.value) + " " + curr);
         }
-    }
-}
-
-void MainWindow::UpdateCurrentBuyout() {
-    if (current_item_) {
-        if (!app_->buyout_manager().Exists(*current_item_))
-            ResetBuyoutWidgets();
-        else
-            UpdateBuyoutWidgets(app_->buyout_manager().Get(*current_item_));
-    } else {
-        std::string tab = current_bucket_.location().GetGeneralHash();
-        if (!app_->buyout_manager().ExistsTab(tab))
-            ResetBuyoutWidgets();
-        else
-            UpdateBuyoutWidgets(app_->buyout_manager().GetTab(tab));
     }
 }
 
@@ -1255,6 +1263,60 @@ void MainWindow::UpdateCurrentHeaderState()
         if (action) action->setChecked(!current_search_->IsColumnHidden(i));
     }
     current_search_->SaveColumnsPosition(ui->treeView->header());
+}
+
+void MainWindow::UpdateCurrentSelection()
+{
+    if (current_items_.count() == 1 && current_buckets_.isEmpty()) {
+        std::shared_ptr<Item> current_item_ = current_items_.first();
+        UpdateCurrentItem(current_item_);
+        if (!app_->buyout_manager().Exists(*current_item_))
+            ResetBuyoutWidgets();
+        else
+            UpdateBuyoutWidgets(app_->buyout_manager().Get(*current_item_));
+    }
+    else if (current_buckets_.count() == 1 && current_items_.isEmpty()) {
+        UpdateCurrentBucket(current_buckets_.first());
+        std::string tab = current_buckets_.first().location().GetGeneralHash();
+        if (!app_->buyout_manager().ExistsTab(tab))
+            ResetBuyoutWidgets();
+        else
+            UpdateBuyoutWidgets(app_->buyout_manager().GetTab(tab));
+    }
+    else if (current_items_.isEmpty() && current_buckets_.isEmpty()){
+        // No selection
+        ui->nameLabel->hide();
+        ui->imageLabel->hide();
+        ui->locationLabel->setText("Location: N/A");
+        ui->propertiesLabel->setText("");
+
+        ui->imageWidget->hide();
+
+        UpdateCurrentItemMinimap(nullptr);
+        GenerateCurrentItemHeader(nullptr);
+
+        ui->typeLineLabel->setText("No Objects Selected");
+        ui->typeLineLabel->show();
+
+        UpdateBuyoutWidgets({});
+    }
+    else {
+        // Multi-selection
+        ui->nameLabel->hide();
+        ui->imageLabel->hide();
+        ui->locationLabel->setText("Location: N/A");
+        ui->propertiesLabel->setText(QString("%1 items selected, %2 buckets").arg(current_items_.count()).arg(current_buckets_.count()));
+
+        ui->imageWidget->hide();
+
+        UpdateCurrentItemMinimap(nullptr);
+        GenerateCurrentItemHeader(nullptr);
+
+        ui->typeLineLabel->setText("Multiple Objects Selected");
+        ui->typeLineLabel->show();
+
+        UpdateBuyoutWidgets({});
+    }
 }
 
 void MainWindow::on_refreshItemsButton_clicked() {
