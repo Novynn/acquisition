@@ -201,8 +201,7 @@ void Shop::CopyToClipboard(const QString &threadId) {
 }
 
 void Shop::ExpireShopData() {
-    Shop::shopsNeedUpdate = true;
-    QLOG_INFO() << "Shop data expired.";
+    shopsNeedUpdate = true;
 }
 
 void Shop::SetAutoUpdate(bool update) {
@@ -247,7 +246,7 @@ const QString Shop::GetShopTemplate() {
 void Shop::Update() {
     QLOG_INFO() << "Update called";
 
-    if (Shop::shopsNeedUpdate) {
+    if (shopsNeedUpdate) {
         Items pool = app_.items();
 
         if (AreItemsShared()) {
@@ -280,7 +279,7 @@ void Shop::Update() {
             }
         }
     }
-    Shop::shopsNeedUpdate = false;
+    shopsNeedUpdate = false;
 }
 
 void Shop::SubmitShopToForum(const QString &threadId) {
