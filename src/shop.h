@@ -73,6 +73,25 @@ public:
     bool IsBumpEnabled() const { return do_bump_; }
     int BumpInterval() const { return bump_interval_; }
     void SetBumpInterval(int i) { bump_interval_ = i;}
+    void SetSubmissionQueueDelay(int i) {submissionQueueDelay_ = i;}
+    int SubmissionQueueDelay() {return submissionQueueDelay_;}
+
+    QDateTime GetShopLastUpdated(const QString &threadId) {
+        ShopData* shop = shops_.value(threadId);
+        if (shop) {
+            return shop->lastSubmitted;
+        }
+        return QDateTime();
+    }
+
+    QDateTime GetShopLastBumped(const QString &threadId) {
+        ShopData* shop = shops_.value(threadId);
+        if (shop) {
+            return shop->lastBumped;
+        }
+        return QDateTime();
+    }
+
     void SaveShops();
     void LoadShops();
 
@@ -89,8 +108,11 @@ public slots:
     void OnShopSubmitted(const QString &threadId);
     void OnShopBumped(const QString &threadId);
     void OnShopError(const QString &threadId, const QString &error);
+    void Tick();
 signals:
     void StatusUpdate(const CurrentStatusUpdate &status);
+protected:
+    void timerEvent(QTimerEvent *);
 private:
     void SubmitSingleShop(ShopData* shop);
 
@@ -98,11 +120,15 @@ private:
     ShopTemplateManager templateManager;
     ShopSubmitter submitter_;
 
+    int submissionQueueTimerId_;
+    QQueue<ShopData*> submittingShops_;
+
     QMap<QString, ShopData*> shops_;
 
     bool auto_update_;
     bool do_bump_;
     int bump_interval_;
+    int submissionQueueDelay_;
 
     void UpdateState();
 

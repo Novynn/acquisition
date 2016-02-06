@@ -24,7 +24,7 @@ public:
     void updateShops();
     void updateTabExclusions();
     void showTemplateDialog(const QString &threadId);
-public slots:
+private slots:
     void on_darkThemeRadioButton_clicked();
     void on_lightThemeRadioButton_clicked();
     void on_buyoutStyleBox_toggled(bool checked);
@@ -46,10 +46,8 @@ public slots:
     void on_addTabExclusion_clicked();
     void on_removeTabExclusion_clicked();
     void on_tabExclusionListWidget_itemChanged(QListWidgetItem *item);
-
-private slots:
     void on_splitTemplateItemsBox_toggled(bool checked);
-
+    void on_submissionQueueDelaySpinBox_valueChanged(int val);
 private:
     void addShopWidget(const QString &id);
     Ui::SettingsPane *ui;

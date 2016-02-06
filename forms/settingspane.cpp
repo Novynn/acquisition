@@ -47,6 +47,14 @@ void SettingsPane::initialize(MainWindow* parent) {
     }
 }
 
+void SettingsPane::updateShops() {
+    for (int row = 0; row < ui->shopsWidget->rowCount(); row++) {
+        QString id = ui->shopsWidget->item(row, 0)->text();
+        ui->shopsWidget->item(row, 1)->setText(app_->shop().GetShopLastUpdated(id).toString());
+        ui->shopsWidget->item(row, 2)->setText(app_->shop().GetShopLastBumped(id).toString());
+    }
+}
+
 void SettingsPane::showTemplateDialog(const QString &threadId) {
     TemplateDialog dialog(app_, threadId, this);
     dialog.setAttribute(Qt::WA_DeleteOnClose, false);
@@ -64,9 +72,16 @@ void SettingsPane::addShopWidget(const QString &id) {
         QTableWidgetItem* thread = new QTableWidgetItem(id);
         ui->shopsWidget->setItem(row, 0, thread);
 
+        QTableWidgetItem* lastUpdated = new QTableWidgetItem(app_->shop().GetShopLastUpdated(id).toString());
+        QTableWidgetItem* lastBumped = new QTableWidgetItem(app_->shop().GetShopLastBumped(id).toString());
+        lastUpdated->setFlags(lastUpdated->flags() ^ Qt::ItemIsEditable);
+        lastBumped->setFlags(lastBumped->flags() ^ Qt::ItemIsEditable);
+        ui->shopsWidget->setItem(row, 1, lastUpdated);
+        ui->shopsWidget->setItem(row, 2, lastBumped);
+
         QPushButton* button = new QPushButton("Edit Template...");
         button->setFlat(true);
-        ui->shopsWidget->setCellWidget(row, 1, button);
+        ui->shopsWidget->setCellWidget(row, 3, button);
         connect(button, &QPushButton::clicked, [this, row] {
             // Trigger template!
             QString threadId = ui->shopsWidget->item(row, 0)->text();
@@ -100,7 +115,9 @@ void SettingsPane::on_shopsWidget_currentItemChanged(QTableWidgetItem *current, 
     }
     else {
         ui->removeShopButton->setEnabled(true);
-        ui->copyShopButton->setEnabled(true);
+        if (!app_->shop().AreItemsShared()) {
+            ui->copyShopButton->setEnabled(true);
+        }
     }
 }
 
@@ -117,6 +134,7 @@ void SettingsPane::on_removeShopButton_clicked() {
 
 void SettingsPane::on_shopsWidget_itemChanged(QTableWidgetItem *item) {
     Q_ASSERT(item->column() == 0);
+    if (item->column() != 0) return;
 
     int row = item->row();
     QString value = item->text();
@@ -169,6 +187,7 @@ void SettingsPane::updateFromStorage() {
     ui->bumpShopBox->setChecked(app_->shop().IsBumpEnabled());
     ui->bumpIntervalBox->setValue(app_->shop().BumpInterval() / 60); // BumpInterval is in seconds
     ui->shopTimeoutBox->setValue(app_->shop().GetTimeout() / 1000);
+    ui->submissionQueueDelaySpinBox->setValue(app_->shop().SubmissionQueueDelay() / 1000);
     ui->splitTemplateItemsBox->setChecked(app_->shop().AreItemsShared());
 
     // Trade
@@ -344,9 +363,15 @@ void SettingsPane::on_splitTemplateItemsBox_toggled(bool checked)
     app_->shop().SetShareItems(checked);
     // Toggle all but the first template
     for (int i = 1; i < ui->shopsWidget->rowCount(); i++) {
-        QPushButton* button = qobject_cast<QPushButton*>(ui->shopsWidget->cellWidget(i, 1));
+        QPushButton* button = qobject_cast<QPushButton*>(ui->shopsWidget->cellWidget(i, 3));
         if (button) {
             button->setEnabled(!checked);
         }
     }
+
+    ui->copyShopButton->setEnabled(!checked);
+}
+
+void SettingsPane::on_submissionQueueDelaySpinBox_valueChanged(int val) {
+    app_->shop().SetSubmissionQueueDelay(val * 1000);
 }

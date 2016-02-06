@@ -642,7 +642,7 @@ void MainWindow::OnStatusUpdate(const CurrentStatusUpdate &status) {
 #else
     (void)need_progress;//Fix compilation warning(unused var on non-windows)
 #endif
-
+    ui->settingsPane->updateShops();
 }
 
 bool MainWindow::eventFilter(QObject *o, QEvent *e) {

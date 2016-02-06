@@ -39,6 +39,7 @@
 #include "mainwindow.h"
 
 const int POE_BUMP_DELAY = 3600; // 1 hour per Path of Exile forum rules
+const int SUBMISSION_QUEUE_DELAY = 30000; // 30 seconds (time in milliseconds)
 const QString TEMPLATE_MESSAGE = "{everything|group}\n\n[url=https://github.com/Novynn/acquisitionplus/releases]Shop made with Acquisition Plus[/url]";
 const QString EMPTY_SLAVE_MESSAGE = "This multi-shop is currently empty.\n\n[url=https://github.com/Novynn/acquisitionplus/releases]Shop made with Acquisition Plus[/url]";
 
@@ -46,6 +47,7 @@ Shop::Shop(Application &app)
     : app_(app)
     , templateManager(&app)
     , submitter_(&app.logged_in_nm())
+    , submissionQueueTimerId_(0)
     , shopsNeedUpdate(false) {
     connect(&submitter_, &ShopSubmitter::ShopSubmitted, this, &Shop::OnShopSubmitted);
     connect(&submitter_, &ShopSubmitter::ShopBumped, this, &Shop::OnShopBumped);
@@ -70,6 +72,7 @@ void Shop::LoadShops() {
         auto_update_ = doc.object().value("auto_update").toBool();
         do_bump_ = doc.object().value("auto_bump").toBool();
         bump_interval_ = doc.object().value("bump_interval").toInt(POE_BUMP_DELAY);
+        submissionQueueDelay_ = doc.object().value("submission_queue_delay").toInt(SUBMISSION_QUEUE_DELAY);
         int timeout = doc.object().value("timeout").toInt();
         if (timeout > 0)
             submitter_.SetTimeout(timeout);
@@ -136,6 +139,7 @@ void Shop::SaveShops() {
     mainObject.insert("auto_bump", do_bump_);
     mainObject.insert("bump_interval", bump_interval_);
     mainObject.insert("timeout", submitter_.GetTimeout());
+    mainObject.insert("submission_queue_delay", submissionQueueDelay_);
     mainObject.insert("shared_items", AreItemsShared());
 
     QJsonArray array;
@@ -244,7 +248,7 @@ const QString Shop::GetShopTemplate() {
 }
 
 void Shop::Update() {
-    QLOG_INFO() << "Update called";
+    QLOG_DEBUG() << "Update called";
 
     if (shopsNeedUpdate) {
         Items pool = app_.items();
@@ -288,20 +292,20 @@ void Shop::SubmitShopToForum(const QString &threadId) {
 
     if (threadId.isEmpty()) {
         shopsToUpdate.append(shops_.values());
-        QLOG_INFO() << "Submitting shops to forum.";
+        QLOG_INFO() << "Submitting shops to forum";
     }
     else {
         shopsToUpdate.append(shops_.value(threadId));
-        QLOG_INFO() << "Submitting shop " << threadId << " to forum.";
+        QLOG_INFO() << "Submitting shop " << threadId << " to forum";
     }
 
     for (ShopData* shop : shopsToUpdate) {
         if (!shop) {
-            QLOG_WARN() << "Attempted to submit an invalid shop.";
+            QLOG_WARN() << "Attempted to submit an invalid shop";
             continue;
         }
         if (submitter_.IsSubmitting(shop->threadId)) {
-            QLOG_WARN() << "Already submitting your shop.";
+            QLOG_WARN() << "Already submitting your shop";
             continue;
         }
         if (shop->shopTemplate.isEmpty()) {
@@ -321,18 +325,41 @@ void Shop::SubmitShopToForum(const QString &threadId) {
     }
 
     if (shopsToSubmit.isEmpty()) {
-        QLOG_INFO() << "No shops were outdated.";
+        QLOG_INFO() << "No shops were outdated";
         return;
     }
 
     for (ShopData* shop : shopsToSubmit) {
-        SubmitSingleShop(shop);
+        if (!submittingShops_.contains(shop)) {
+            submittingShops_.append(shop);
+        }
+        else {
+            QLOG_INFO() << "Already submitting shop #" << shop->threadId;
+        }
+    }
+
+    if (submissionQueueTimerId_ == 0) {
+        submissionQueueTimerId_ = startTimer(SubmissionQueueDelay());
+        Tick();
     }
     UpdateState();
 }
 
+void Shop::Tick() {
+    if (submittingShops_.count() <= 1) {
+        if (submissionQueueTimerId_) {
+            killTimer(submissionQueueTimerId_);
+            submissionQueueTimerId_ = 0;
+        }
+        if (submittingShops_.isEmpty()) return;
+    }
+
+    ShopData* shop = submittingShops_.dequeue();
+    SubmitSingleShop(shop);
+}
+
 void Shop::UpdateState() {
-    int submitting = submitter_.Count();
+    int submitting = submitter_.Count() + submittingShops_.count();
     int count = shops_.count();
     CurrentStatusUpdate status = CurrentStatusUpdate();
     status.state = ProgramState::ShopSubmitting;
@@ -354,6 +381,7 @@ void Shop::SubmitSingleShop(ShopData* shop) {
     if (shopData.isEmpty() && AreItemsShared()) {
         shopData = EMPTY_SLAVE_MESSAGE;
     }
+    QLOG_INFO() << qPrintable("Submitting shop #" + shop->threadId);
     submitter_.BeginShopSubmission(shop->threadId, shopData, shouldBump);
     UpdateState();
 }
@@ -365,7 +393,7 @@ void Shop::OnShopSubmitted(const QString &threadId) {
     QNetworkRequest request(QUrl("http://verify.poe.trade/" + threadId + "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
     app_.logged_in_nm().get(request);
 
-    QLOG_INFO() << "Shop updated successfully!";
+    QLOG_INFO() << qPrintable("Shop #" + threadId + " updated successfully.");
     shop->lastSubmitted = QDateTime::currentDateTime();
     shop->lastSubmissionHash = QString::fromStdString(Util::Md5(shop->shopData.toStdString()));
 
@@ -379,9 +407,14 @@ void Shop::OnShopBumped(const QString &threadId) {
     QLOG_INFO() << "Shop bumped successfully!";
     shop->lastBumped = QDateTime::currentDateTime();
     UpdateState();
+    SaveShops();
 }
 
 void Shop::OnShopError(const QString &threadId, const QString &error) {
     QLOG_ERROR() << qPrintable("An error occurred with shop " + threadId + ": " + error);
     UpdateState();
+}
+
+void Shop::timerEvent(QTimerEvent *) {
+    Tick();
 }

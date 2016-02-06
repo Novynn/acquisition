@@ -66,7 +66,7 @@ ShopSubmission* ShopSubmitter::ExtractResponse(QNetworkReply *reply) {
     ShopSubmission* submission = 0;
 
     if (threadId.isEmpty()) {
-        error = "An empty shop was submitted.";
+        error = "An empty shop was submitted";
     }
     else {
         submission = submissions.value(threadId);
@@ -74,7 +74,7 @@ ShopSubmission* ShopSubmitter::ExtractResponse(QNetworkReply *reply) {
         if (reply->error() != QNetworkReply::NoError) {
             error = "A network error occurred: " + reply->errorString();
             if (reply->error() == QNetworkReply::OperationCanceledError) {
-                error = "Timed out while submitting to the server.";
+                error = "Timed out while submitting to the server";
             }
         }
         else {
@@ -83,14 +83,14 @@ ShopSubmission* ShopSubmitter::ExtractResponse(QNetworkReply *reply) {
             case SHOP_SUBMISSION_STARTED: {
                 std::string hash = Util::GetCsrfToken(bytes.toStdString(), "forum_thread");
                 if (hash.empty()) {
-                    error = "Could not extract CSRF token.";
+                    error = "Could not extract CSRF token";
                     break;
                 }
 
                 std::string title = Util::FindTextBetween(bytes.toStdString(),
                                                           "<input type=\"text\" name=\"title\" id=\"title\" value=\"", "\" class=\"textInput\">");
                 if (title.empty()) {
-                    error = "Could not extract title from forum thread.";
+                    error = "Could not extract title from forum thread";
                     break;
                 }
 
@@ -100,7 +100,7 @@ ShopSubmission* ShopSubmitter::ExtractResponse(QNetworkReply *reply) {
             case SHOP_SUBMISSION_BUMP_STARTED: {
                 std::string hash = Util::GetCsrfToken(bytes.toStdString(), "forum_post");
                 if (hash.empty()) {
-                    error = "Could not extract CSRF token.";
+                    error = "Could not extract CSRF token";
                     break;
                 }
                 submission->data.insert("forum_post", QString::fromStdString(hash));
