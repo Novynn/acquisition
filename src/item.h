@@ -87,6 +87,12 @@ public:
     bool has_mtx() const { return has_mtx_; }
     const ModTable &mod_table() const { return mod_table_; }
     std::string broken_hash() const { return broken_hash_; }
+    const std::string& json() { return json_; };
+    const std::string& note() const { return note_; };
+    int count() const { return count_; };
+    bool has_mtx() const { return has_mtx_; }
+    const ModTable &mod_table() const { return mod_table_; }
+    int ilvl() const { return ilvl_; }
 
 private:
     // The point of GenerateMods is to create combined (e.g. implicit+explicit) poe.trade-like mod map to be searched by mod filter.
@@ -110,12 +116,15 @@ private:
     ItemSocketGroup sockets_;
     std::vector<ItemSocketGroup> socket_groups_;
     std::map<std::string, int> requirements_;
+    std::string json_;
     int count_;
     bool has_mtx_;
+    int ilvl_;
     std::vector<ItemProperty> text_properties_;
     std::vector<ItemRequirement> text_requirements_;
     std::map<std::string, ItemMods> text_mods_;
     std::vector<ItemSocket> text_sockets_;
+    std::string note_;
     ModTable mod_table_;
 };
 

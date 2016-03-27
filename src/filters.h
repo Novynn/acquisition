@@ -232,3 +232,24 @@ public:
     using BooleanFilter::BooleanFilter;
     bool Matches(const std::shared_ptr<Item> &item, FilterData *data);
 };
+
+class PricedFilter : public BooleanFilter {
+public:
+    PricedFilter(QLayout *parent, std::string property, std::string caption, const BuyoutManager &bm) :
+        BooleanFilter(parent, property, caption),
+        bm_(bm)
+    {}
+    bool Matches(const std::shared_ptr<Item> &item, FilterData *data);
+private:
+    const BuyoutManager &bm_;
+};
+
+class ItemlevelFilter : public MinMaxFilter {
+public:
+    ItemlevelFilter(QLayout *parent, std::string property) :
+        MinMaxFilter(parent, property) {}
+    ItemlevelFilter(QLayout *parent, std::string property, std::string caption) :
+        MinMaxFilter(parent, property, caption) {}
+    bool IsValuePresent(const std::shared_ptr<Item> & /* item */) { return true; }
+    double GetValue(const std::shared_ptr<Item> &item);
+};

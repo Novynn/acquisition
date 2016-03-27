@@ -30,7 +30,7 @@
 #include "itemlocation.h"
 
 const std::vector<std::string> ITEM_MOD_TYPES = {
-    "implicitMods", "explicitMods", "craftedMods", "cosmeticMods"
+    "implicitMods", "enchantMods", "explicitMods", "craftedMods", "cosmeticMods"
 };
 
 static std::string item_unique_properties(const rapidjson::Value &json, const std::string &name) {
@@ -59,7 +59,8 @@ Item::Item(const rapidjson::Value &json) :
     sockets_cnt_(0),
     links_cnt_(0),
     sockets_({ 0, 0, 0, 0 }),
-    has_mtx_(false)
+    has_mtx_(false),
+    ilvl_(0)
 {
     // Fix for 2.0.2
     QString name = QString::fromStdString(name_);
@@ -77,6 +78,10 @@ Item::Item(const rapidjson::Value &json) :
             for (auto &mod : json[mod_type.c_str()])
                 mods.push_back(mod.GetString());
         }
+    }
+
+    if (json.HasMember("note")) {
+        note_ = json["note"].GetString();
     }
 
     if (json.HasMember("properties")) {
@@ -193,6 +198,9 @@ Item::Item(const rapidjson::Value &json) :
     }
 
     has_mtx_ = json.HasMember("cosmeticMods");
+
+    if (json.HasMember("ilvl"))
+        ilvl_ = json["ilvl"].GetInt();
 
     GenerateMods(json);
 }

@@ -34,7 +34,9 @@ public:
     bool enabled() { return enabled_; }
     bool IsUrlSet() { return !url_.empty(); }
     const std::string GetUrl() { return url_; }
+    bool IsRemoteScriptSet() { return !process_script_.empty(); }
     void SendOnlineUpdate(bool online);
+    void SetRemoteScript(const std::string& script);
 public slots:
     void Check();
 signals:
@@ -44,6 +46,7 @@ private:
     DataManager &sensitive_data_;
     bool enabled_;
     std::string url_;
+    std::string process_script_;
     bool previous_status_;
     QTimer timer_;
     QNetworkAccessManager nm_;
