@@ -21,6 +21,8 @@
 
 #include "porting.h"
 
+#include <QDir>
+
 std::string user_dir;
 
 namespace Filesystem {
@@ -31,6 +33,8 @@ void Init() {
 
 void SetUserDir(const std::string &dir) {
     user_dir = dir;
+    if (!QDir().exists(QString::fromStdString(user_dir)))
+        QDir().mkdir(QString::fromStdString(user_dir));
 }
 
 std::string UserDir() {
