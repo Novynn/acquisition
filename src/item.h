@@ -87,11 +87,8 @@ public:
     bool has_mtx() const { return has_mtx_; }
     const ModTable &mod_table() const { return mod_table_; }
     std::string broken_hash() const { return broken_hash_; }
-    const std::string& json() { return json_; };
-    const std::string& note() const { return note_; };
-    int count() const { return count_; };
-    bool has_mtx() const { return has_mtx_; }
-    const ModTable &mod_table() const { return mod_table_; }
+    const std::string& json() { return json_; }
+    const std::string& note() const { return note_; }
     int ilvl() const { return ilvl_; }
 
 private:

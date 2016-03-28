@@ -50,4 +50,6 @@ private:
     bool previous_status_;
     QTimer timer_;
     QNetworkAccessManager nm_;
+    bool isPoeRunningLocally();
+    bool isPoeRunningRemotely(const std::string& script);
 };

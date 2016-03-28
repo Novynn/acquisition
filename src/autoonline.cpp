@@ -31,26 +31,7 @@
 #include "datamanager.h"
 #include "version.h"
 
-namespace {
-
-<<<<<<< HEAD
-AutoOnline::AutoOnline(DataManager &data, DataManager &sensitive_data):
-    data_(data),
-    sensitive_data_(sensitive_data),
-    enabled_(data_.GetBool("online_enabled")),
-    url_(sensitive_data_.Get("online_url")),
-    previous_status_(true)  // set to true to force first refresh
-{
-    timer_.setInterval(kOnlineCheckInterval);
-    connect(&timer_, &QTimer::timeout, this, &AutoOnline::Check);
-    if (enabled_) {
-        timer_.start();
-        Check();
-    }
-}
-
-static bool IsPoeRunning() {
-bool is_poe_running_locally() {
+bool AutoOnline::isPoeRunningLocally() {
 #if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
     QProcess process;
     process.start("/bin/sh -c \"ps -ax|grep PathOfExile.exe|grep -v grep|wc -l\"");
@@ -92,7 +73,7 @@ bool is_poe_running_locally() {
 #endif
 }
 
-bool is_poe_running_remotely(const std::string& script) {
+bool AutoOnline::isPoeRunningRemotely(const std::string& script) {
 #if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
     std::string poe_check_script = "/bin/sh -c \"" + script + "\"";
 
@@ -102,18 +83,15 @@ bool is_poe_running_remotely(const std::string& script) {
 
     return process.exitCode() == 0;
 #elif defined(Q_OS_WIN)
+    Q_UNUSED(script);
     QLOG_ERROR() << "Script handling has not been implemented on Windows";
     return false;
 #endif
 }
 
-
-} //end of anonymous namespace
-
-// check for PoE running every minute
 const int kOnlineCheckInterval = 60 * 1000;
 
-AutoOnline::AutoOnline(DataStore &data, DataStore &sensitive_data) :
+AutoOnline::AutoOnline(DataManager &data, DataManager &sensitive_data) :
     data_(data),
     sensitive_data_(sensitive_data),
     enabled_(data_.GetBool("online_enabled")),
@@ -143,11 +121,11 @@ void AutoOnline::SendOnlineUpdate(bool online) {
 }
 
 void AutoOnline::Check() {
-    bool running = is_poe_running_locally();
+    bool running = isPoeRunningLocally();
     if(IsRemoteScriptSet()){
-        running = is_poe_running_remotely(process_script_);
+        running = isPoeRunningRemotely(process_script_);
     } else {
-        running = is_poe_running_locally();
+        running = isPoeRunningLocally();
     }
 
     if (running || previous_status_) {

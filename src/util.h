@@ -42,6 +42,8 @@ std::string Md5(const std::string &value);
 double AverageDamage(const std::string &s);
 void PopulateBuyoutTypeComboBox(QComboBox *combobox);
 void PopulateBuyoutCurrencyComboBox(QComboBox *combobox);
+int TagAsCurrency(const std::string &tag);
+int TagAsBuyoutType(const std::string &tag);
 
 int TextWidth(TextWidthId id);
 
