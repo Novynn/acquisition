@@ -34,13 +34,10 @@
 bool AutoOnline::isPoeRunningLocally() {
 #if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
     QProcess process;
-    process.start("/bin/sh -c \"ps -ax|grep PathOfExile.exe|grep -v grep|wc -l\"");
+    process.start("/bin/sh -c \"ps -ax|grep PathOfExile|grep -v grep|wc -l\"");
     process.waitForFinished(-1);
     QString i = process.readAllStandardOutput();
-    process.start("/bin/sh -c \"ps -ax|grep PathOfExileSteam.exe|grep -v grep|wc -l\"");
-    process.waitForFinished(-1);
-    QString j = process.readAllStandardOutput();
-    return i.toInt() > 0 || j.toInt() > 0;
+    return i.toInt() > 0;
 #elif defined(Q_OS_WIN)
 // http://msdn.microsoft.com/en-us/library/windows/desktop/ms686701%28v=vs.85%29.aspx
     HANDLE hProcessSnap;
@@ -63,7 +60,7 @@ bool AutoOnline::isPoeRunningLocally() {
     bool found = false;
     do {
         QString s = QString::fromUtf16((char16_t*)pe32.szExeFile);
-        if (s == "PathOfExile.exe" || s == "PathOfExileSteam.exe")
+        if (s == "PathOfExile")
             found = true;
     } while(Process32Next(hProcessSnap, &pe32));
 
