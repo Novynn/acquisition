@@ -60,7 +60,7 @@ bool AutoOnline::isPoeRunningLocally() {
     bool found = false;
     do {
         QString s = QString::fromUtf16((char16_t*)pe32.szExeFile);
-        if (s == "PathOfExile")
+        if (s.contains("PathOfExile"))
             found = true;
     } while(Process32Next(hProcessSnap, &pe32));
 
