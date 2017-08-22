@@ -122,14 +122,14 @@ void SettingsPane::on_shopsWidget_currentItemChanged(QTableWidgetItem *current, 
 }
 
 void SettingsPane::on_removeShopButton_clicked() {
-    auto items = ui->shopsWidget->selectedItems();
-    for (auto item : items) {
-        int row = item->row();
-        QString threadId = ui->shopsWidget->item(row, 0)->text();
-        ui->shopsWidget->removeRow(row);
-        shopThreadIds.remove(row);
-        app_->shop().RemoveShop(threadId);
-    }
+    auto cells = ui->shopsWidget->selectedItems();
+
+    QString threadID = cells[0]->text();
+    int row = cells[0]->row();
+
+    ui->shopsWidget->removeRow(row);
+    shopThreadIds.remove(row);
+    app_->shop().RemoveShop(threadID);
 }
 
 void SettingsPane::on_shopsWidget_itemChanged(QTableWidgetItem *item) {
